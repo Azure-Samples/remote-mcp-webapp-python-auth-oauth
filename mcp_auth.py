@@ -44,7 +44,7 @@ AZURE_GRAPH_URL = "https://graph.microsoft.com/v1.0/me"
 # OAuth scopes
 SCOPES = ["openid", "profile", "email", "User.Read"]
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 # Development API Key (for testing only)
 DEV_API_KEY = os.getenv("DEV_API_KEY", "dev-test-key-12345")
@@ -511,6 +511,11 @@ class MCPAuthService:
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Dependency to get current authenticated user"""
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing token"
+        )
     auth_service = MCPAuthService(os.getenv("BASE_URL", "http://localhost:8000"))
     return auth_service.validate_token(credentials.credentials)
 
